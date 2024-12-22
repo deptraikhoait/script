@@ -1,24 +1,20 @@
-local HttpService = game:GetService("HttpService")
-local serverUrl = "http://127.0.0.1:5000" -- URL của tool
+local WebSocket = syn.websocket.connect("ws://127.0.0.1:8765")
 
 local player = game.Players.LocalPlayer
+local fruit = player.Backpack:FindFirstChildWhichIsA("Tool") and player.Backpack:FindFirstChildWhichIsA("Tool").Name or "Không có trái cây"
+local beli = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Beli") and player.leaderstats.Beli.Value or 0
+local level = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Level") and player.leaderstats.Level.Value or 0
+
 local data = {
     accountName = player.Name,
-    fruit = player.Backpack:FindFirstChildWhichIsA("Tool") and player.Backpack:FindFirstChildWhichIsA("Tool").Name or "Không có trái cây",
-    beli = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Beli") and player.leaderstats.Beli.Value or 0,
-    level = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Level") and player.leaderstats.Level.Value or 0
+    fruit = fruit,
+    beli = beli,
+    level = level
 }
 
 local function sendSignal()
-    local success, response = pcall(function()
-        return HttpService:PostAsync(serverUrl, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
-    end)
-
-    if success then
-        print("[Script] Tín hiệu đã gửi thành công!")
-    else
-        warn("[Script] Lỗi khi gửi tín hiệu:", response)
-    end
+    WebSocket:Send(game:GetService("HttpService"):JSONEncode(data))
+    print("[Script] Đã gửi tín hiệu qua WebSocket")
 end
 
 -- Gửi tín hiệu mỗi 5 giây
