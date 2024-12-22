@@ -1,0 +1,39 @@
+-- Cấu hình HTTP Service
+local HttpService = game:GetService("HttpService")
+
+-- URL của tool bên ngoài (Python server)
+local serverUrl = "http://127.0.0.1:5000" -- Đổi IP nếu chạy trên mạng LAN hoặc server khác
+
+-- Lấy thông tin người chơi
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local fruit = player.Backpack:FindFirstChildWhichIsA("Tool") and player.Backpack:FindFirstChildWhichIsA("Tool").Name or "Không có trái cây"
+local beli = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Beli") and player.leaderstats.Beli.Value or 0
+local level = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Level") and player.leaderstats.Level.Value or 0
+
+-- Dữ liệu gửi đi
+local data = {
+    accountName = player.Name,
+    fruit = fruit,
+    beli = beli,
+    level = level
+}
+
+-- Gửi tín hiệu đến tool
+local function sendSignal()
+    local success, response = pcall(function()
+        return HttpService:PostAsync(serverUrl, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+    end)
+
+    if success then
+        print("[Script] Tín hiệu đã gửi thành công!")
+    else
+        warn("[Script] Lỗi khi gửi tín hiệu:", response)
+    end
+end
+
+-- Chạy tín hiệu mỗi 5 giây
+while true do
+    sendSignal()
+    wait(5)
+end
