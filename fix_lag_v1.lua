@@ -3,14 +3,26 @@ local lighting = game:GetService("Lighting")
 local player = game.Players.LocalPlayer
 
 -- Tối ưu hóa Lighting
-local function optimizeLighting()
-    lighting.GlobalShadows = false
-    lighting.FogEnd = 100000
-    lighting.Brightness = 1
-    lighting.ClockTime = 14
+lighting.GlobalShadows = false
+lighting.FogEnd = 50
+lighting.Brightness = 0
+lighting.ClockTime = 14
+lighting.Technology = Enum.Technology.Compatibility
+lighting.EnvironmentDiffuseScale = 0
+lighting.EnvironmentSpecularScale = 0
+
+-- Tối ưu địa hình
+local function optimizeTerrain()
+    local terrain = workspace:FindFirstChildOfClass("Terrain")
+    if terrain then
+        terrain.WaterWaveSize = 0
+        terrain.WaterWaveSpeed = 0
+        terrain.WaterTransparency = 1
+        terrain.WaterReflectance = 0
+    end
 end
 
--- Giảm đồ họa cho từng đối tượng cụ thể
+-- Tối ưu đối tượng
 local function optimizeObject(obj)
     if obj:IsA("ParticleEmitter") then
         obj.Rate = 0
@@ -19,46 +31,58 @@ local function optimizeObject(obj)
     elseif obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
         obj.Enabled = false
     elseif obj:IsA("Decal") or obj:IsA("Texture") then
-        pcall(function()
-            obj:Destroy()
-        end)
-    elseif obj:IsA("MeshPart") or obj:IsA("UnionOperation") or obj:IsA("Part") then
+        obj:Destroy()
+    elseif obj:IsA("MeshPart") or obj:IsA("UnionOperation") then
         obj.Material = Enum.Material.SmoothPlastic
-        obj.CastShadow = false
+        obj.Color = Color3.new(0.5, 0.5, 0.5)
     end
 end
 
--- Giảm chi tiết địa hình (Terrain)
-local function optimizeTerrain()
-    local terrain = workspace:FindFirstChildOfClass("Terrain")
-    if terrain then
-        terrain.WaterWaveSize = 0
-        terrain.WaterWaveSpeed = 0
-        terrain.WaterTransparency = 1
-        terrain.WaterReflectance = 0
-        terrain.WaterColor = Color3.new(0, 0.5, 1)
+-- Tối ưu nhân vật
+local function optimizeCharacter(character)
+    for _, obj in ipairs(character:GetDescendants()) do
+        if obj:IsA("Clothing") or obj:IsA("Accessory") or obj:IsA("Decal") then
+            obj:Destroy()
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+            obj.Enabled = false
+        end
     end
 end
 
--- Quét toàn bộ Workspace và tối ưu hóa
+-- Tối ưu Workspace
 local function optimizeWorkspace()
-    for _, obj in pairs(workspace:GetDescendants()) do
+    local descendants = workspace:GetDescendants()
+    for i, obj in ipairs(descendants) do
+        if i % 100 == 0 then
+            task.wait()
+        end
         optimizeObject(obj)
     end
 end
 
--- Thực hiện tối ưu khi nhân vật spawn lại
-local function onCharacterAdded(newCharacter)
-    newCharacter:WaitForChild("Humanoid")
-    optimizeWorkspace()
+-- Tắt dịch vụ không cần thiết
+local function disableUnnecessaryServices()
+    local servicesToDisable = {
+        "PathfindingService",
+        "CollectionService",
+        "PhysicsService",
+        "Chat",
+    }
+    for _, serviceName in ipairs(servicesToDisable) do
+        local service = game:GetService(serviceName)
+        if service then
+            service:SetAttribute("Enabled", false)
+        end
+    end
 end
 
--- Lắng nghe sự kiện nhân vật spawn lại
-player.CharacterAdded:Connect(onCharacterAdded)
-
--- Chạy tối ưu hóa khi bắt đầu
-optimizeLighting()
+-- Tích hợp tất cả tối ưu
+player.CharacterAdded:Connect(optimizeCharacter)
+if player.Character then
+    optimizeCharacter(player.Character)
+end
 optimizeTerrain()
 optimizeWorkspace()
+disableUnnecessaryServices()
 
-print("Đã giảm đồ họa xuống mức thấp nhất.")
+print("Đồ họa đã được giảm xuống mức thấp nhất.")
