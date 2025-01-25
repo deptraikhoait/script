@@ -4,7 +4,8 @@ local player = game.Players.LocalPlayer
 
 -- Tối ưu hóa Lighting
 lighting.GlobalShadows = false
-lighting.FogEnd = 50
+lighting.FogEnd = math.huge -- Loại bỏ hoàn toàn sương mù
+lighting.FogStart = math.huge -- Đảm bảo sương mù không xuất hiện
 lighting.Brightness = 0
 lighting.ClockTime = 14
 lighting.Technology = Enum.Technology.Compatibility
@@ -54,7 +55,7 @@ local function optimizeWorkspace()
     local descendants = workspace:GetDescendants()
     for i, obj in ipairs(descendants) do
         if i % 100 == 0 then
-            task.wait()
+            task.wait() -- Tránh làm game bị đứng khi duyệt qua nhiều đối tượng
         end
         optimizeObject(obj)
     end
